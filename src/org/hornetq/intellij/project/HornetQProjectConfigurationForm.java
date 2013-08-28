@@ -4,18 +4,12 @@ import com.intellij.openapi.ui.TextFieldWithBrowseButton;
 
 import javax.swing.*;
 
-/**
- * Created with IntelliJ IDEA.
- * User: andy
- * Date: 27/08/13
- * Time: 16:21
- * To change this template use File | Settings | File Templates.
- */
 public class HornetQProjectConfigurationForm
 {
    private JPanel hornetQProjectConfigPanel;
    private JLabel hornetQProjectConfiglabel;
    private TextFieldWithBrowseButton hornetQHome;
+
 
    public void setData(HornetQProjectComponent data)
    {
@@ -29,11 +23,18 @@ public class HornetQProjectConfigurationForm
 
    public boolean isModified(HornetQProjectComponent data)
    {
-      return false;
+      return hornetQHome.getText() != null && !hornetQHome.getText().equals("") ?
+             ! hornetQHome.getText().equals(data.getHornetQHome()) :
+             data.getHornetQHome() != null;
    }
 
    public JComponent getForm()
    {
       return hornetQProjectConfigPanel;
+   }
+
+   public TextFieldWithBrowseButton getHornetQHome()
+   {
+      return hornetQHome;
    }
 }

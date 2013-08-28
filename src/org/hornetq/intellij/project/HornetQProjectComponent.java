@@ -1,30 +1,33 @@
 package org.hornetq.intellij.project;
 
+import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.ProjectComponent;
+import com.intellij.openapi.components.State;
+import com.intellij.openapi.components.Storage;
+import com.intellij.openapi.fileChooser.FileChooserDescriptorFactory;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.project.Project;
+import com.intellij.ui.DocumentAdapter;
+import com.intellij.util.xmlb.XmlSerializerUtil;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
 
-/**
- * Created with IntelliJ IDEA.
- * User: andy
- * Date: 27/08/13
- * Time: 16:16
- * To change this template use File | Settings | File Templates.
- */
-public class HornetQProjectComponent implements ProjectComponent,Configurable
+@State(name = "org.hornetq.intellij.project.HornetQProjectComponent", storages = {@Storage(file = "$WORKSPACE_FILE$"
+)})
+public class HornetQProjectComponent implements ProjectComponent,Configurable, PersistentStateComponent<ProjectState>
 {
-   HornetQProjectConfigurationForm form = new HornetQProjectConfigurationForm();
-   private String hornetQHome;
+   ProjectState projectState = new ProjectState();
 
-   public HornetQProjectComponent(Project project)
+   private HornetQProjectConfigurationForm form;
+
+
+   public HornetQProjectComponent()
    {
-      System.out.println("HornetQProjectComponent.HornetQProjectComponent");
    }
 
    public void initComponent()
@@ -74,8 +77,28 @@ public class HornetQProjectComponent implements ProjectComponent,Configurable
       if(form == null)
       {
          form = new HornetQProjectConfigurationForm();
+         form.getHornetQHome().addBrowseFolderListener("Choose HornetQ Home",
+               "Choose the directory where HornetQ standalone is deployed or a checked out from git",
+               null,
+               FileChooserDescriptorFactory.createSingleFolderDescriptor());
+
+         form.getHornetQHome().getTextField().getDocument().addDocumentListener(new DocumentAdapter()
+         {
+
+            public void textChanged(DocumentEvent event)
+            {
+               onHornetQHomeChanged();
+            }
+         });
       }
+
       return form.getForm();
+   }
+
+   private void onHornetQHomeChanged()
+   {
+      String newHome = form.getHornetQHome().getText();
+      //todo some validation
    }
 
    @Override
@@ -89,7 +112,7 @@ public class HornetQProjectComponent implements ProjectComponent,Configurable
    {
       if(form != null)
       {
-         form.setData(this);
+         form.getData(this);
       }
    }
 
@@ -98,7 +121,7 @@ public class HornetQProjectComponent implements ProjectComponent,Configurable
    {
      if(form != null)
      {
-        form.getData(this);
+        form.setData(this);
      }
    }
 
@@ -110,11 +133,21 @@ public class HornetQProjectComponent implements ProjectComponent,Configurable
 
    public String getHornetQHome()
    {
-      return hornetQHome;
+      return projectState.hornetQHome;
    }
 
    public void setHornetQHome(String hornetQHome)
    {
-      this.hornetQHome = hornetQHome;
+      this.projectState.hornetQHome = hornetQHome;
+   }
+
+   public void loadState(ProjectState state)
+   {
+      projectState = state;
+   }
+
+   public ProjectState getState()
+   {
+      return projectState;
    }
 }
